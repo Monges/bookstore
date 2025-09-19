@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль - Книжный магазин</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-xl">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-book-open mr-2"></i>
+                    Книжный мир
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-home mr-1"></i>Главная
+                    </a>
+                    <a href="profile.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-user mr-1"></i>Профиль
+                    </a>
+                    <a href="login.html" class="hover:text-blue-200 font-semibold" id="authLink">
+                        <i class="fas fa-sign-in-alt mr-1"></i>Войти
+                    </a>
+                    <div id="adminLink" class="hidden">
+                        <a href="admin.html" class="hover:text-blue-200 font-semibold">
+                            <i class="fas fa-cog mr-1"></i>Админка
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- User Info -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                    <i class="fas fa-user-circle mr-3 text-blue-600"></i>Мой профиль
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Имя пользователя</label>
+                        <div class="text-lg font-semibold" id="userUsername"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <div class="text-lg font-semibold" id="userEmail"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Статус</label>
+                        <div class="text-lg font-semibold" id="userRole"></div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Дата регистрации</label>
+                        <div class="text-lg font-semibold" id="userCreatedAt"></div>
+                    </div>
+                </div>
+
+                <button onclick="logout()" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Выйти
+                </button>
+            </div>
+
+            <!-- Current Rentals -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                    <i class="fas fa-calendar-check mr-3 text-green-600"></i>Активные аренды
+                </h2>
+                <div id="currentRentals">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Загрузка аренд...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">
+                    <i class="fas fa-history mr-3 text-blue-600"></i>История операций
+                </h2>
+                <div id="transactionHistory">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Загрузка истории...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadProfile() {
+            if (!checkAuth()) return;
+
+            try {
+                const response = await fetch('/api/profile', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.message);
+
+                // Update user info
+                document.getElementById('userUsername').textContent = data.user.username;
+                document.getElementById('userEmail').textContent = data.user.email;
+                document.getElementById('userRole').textContent = data.user.role === 'admin' ? 'Администратор' : 'Пользователь';
+                document.getElementById('userCreatedAt').textContent = new Date(data.user.createdAt).toLocaleDateString('ru-RU');
+
+                // Display current rentals
+                const currentRentals = data.transactions.filter(t => t.status === 'active rental');
+                displayRentals(currentRentals);
+
+                // Display transaction history
+                const history = data.transactions.filter(t => t.status !== 'active rental');
+                displayTransactionHistory(history);
+
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                if (error.message === 'Token is not valid') {
+                    logout();
+                } else {
+                    alert('Ошибка загрузки профиля');
+                }
+            }
+        }
+
+        function displayRentals(rentals) {
+            const container = document.getElementById('currentRentals');
+            
+            if (rentals.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-book-open text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">Нет активных аренд</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            rentals.forEach(rental => {
+                const endDate = new Date(rental.rentalEndDate);
+                const daysLeft = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
+                
+                html += `
+                    <div class="border rounded-lg p-4 mb-4 bg-gradient-to-r from-green-50 to-blue-50">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-semibold text-lg">${rental.bookId.title}</h4>
+                                <p class="text-gray-600">${rental.bookId.author}</p>
+                            </div>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                                ${rental.rentalDuration}
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <span class="text-sm text-gray-600">Арендовано до:</span>
+                                <div class="font-semibold">${endDate.toLocaleDateString('ru-RU')}</div>
+                            </div>
+                            <div>
+                                <span class="text-sm text-gray-600">Осталось дней:</span>
+                                <div class="font-semibold ${daysLeft <= 3 ? 'text-red-600' : 'text-green-600'}">
+                                    ${daysLeft} ${daysLeft === 1 ? 'день' : daysLeft < 5 ? 'дня' : 'дней'}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button onclick="returnBook('${rental._id}')" 
+                                class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm">
+                            <i class="fas fa-undo mr-2"></i>Вернуть книгу
+                        </button>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function displayTransactionHistory(transactions) {
+            const container = document.getElementById('transactionHistory');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-receipt text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">История операций пуста</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            transactions.forEach(transaction => {
+                const date = new Date(transaction.createdAt);
+                const isRental = transaction.type === 'rental';
+                
+                html += `
+                    <div class="border rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-semibold">${transaction.bookId.title}</h4>
+                                <p class="text-gray-600 text-sm">${transaction.bookId.author}</p>
+                            </div>
+                            <span class="px-3 py-1 rounded-full text-sm ${
+                                transaction.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                transaction.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                            }">
+                                ${isRental ? 'Аренда' : 'Покупка'}
+                            </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-gray-600">Дата:</span>
+                                <div>${date.toLocaleDateString('ru-RU')}</div>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Сумма:</span>
+                                <div class="font-semibold">${transaction.amount}₽</div>
+                            </div>
+                            ${isRental ? `
+                            <div>
+                                <span class="text-gray-600">Срок:</span>
+                                <div>${transaction.rentalDuration}</div>
+                            </div>
+                            <div>
+                                <span class="text-gray-600">Статус:</span>
+                                <div>${transaction.status === 'completed' ? 'Завершено' : 
+                                       transaction.status === 'overdue' ? 'Просрочено' : 'Активно'}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        async function returnBook(transactionId) {
+            if (!confirm('Вы уверены, что хотите вернуть книгу?')) return;
+
+            try {
+                const response = await fetch('/api/profile/return/' + transactionId, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Книга успешно возвращена!');
+                    loadProfile(); // Reload profile data
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error returning book:', error);
+                alert('Ошибка возврата книги');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthState();
+            loadProfile();
+        });
+    </script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

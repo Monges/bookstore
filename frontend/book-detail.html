@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали книги - Книжный магазин</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-xl">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-book-open mr-2"></i>
+                    Книжный мир
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-home mr-1"></i>Главная
+                    </a>
+                    <a href="profile.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-user mr-1"></i>Профиль
+                    </a>
+                    <a href="login.html" class="hover:text-blue-200 font-semibold" id="authLink">
+                        <i class="fas fa-sign-in-alt mr-1"></i>Войти
+                    </a>
+                    <div id="adminLink" class="hidden">
+                        <a href="admin.html" class="hover:text-blue-200 font-semibold">
+                            <i class="fas fa-cog mr-1"></i>Админка
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Book Details -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+                <!-- Book Cover -->
+                <div class="flex justify-center">
+                    <img id="bookCover" src="" alt="Обложка книги" 
+                         class="w-full max-w-sm h-auto rounded-lg shadow-xl"
+                         onerror="this.src='/images/default-cover.jpg'">
+                </div>
+
+                <!-- Book Info -->
+                <div>
+                    <h1 id="bookTitle" class="text-3xl font-bold text-gray-800 mb-4"></h1>
+                    
+                    <div class="flex items-center mb-6">
+                        <span id="bookAuthor" class="text-xl text-gray-600 mr-4"></span>
+                        <span id="bookYear" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"></span>
+                    </div>
+
+                    <div class="mb-6">
+                        <span id="bookCategory" class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm"></span>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-2">Описание</h3>
+                        <p id="bookDescription" class="text-gray-700 leading-relaxed"></p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600" id="bookPrice"></div>
+                            <div class="text-sm text-gray-600">Цена покупки</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600" id="bookRentalPrice"></div>
+                            <div class="text-sm text-gray-600">Аренда в месяц</div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-4" id="actionButtons">
+                        <button onclick="purchaseBook()" 
+                                class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                            <i class="fas fa-shopping-cart mr-2"></i>Купить
+                        </button>
+                        <button onclick="showRentalOptions()" 
+                                class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                            <i class="fas fa-calendar-alt mr-2"></i>Арендовать
+                        </button>
+                    </div>
+
+                    <div id="availabilityStatus" class="mt-4 p-3 rounded-lg hidden">
+                        <!-- Will show availability status -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rental Modal -->
+        <div id="rentalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+            <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+                <h3 class="text-xl font-bold mb-4">Выберите срок аренды</h3>
+                <div class="space-y-3 mb-6">
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="rentalDuration" value="2 weeks" class="mr-3">
+                        <div>
+                            <div class="font-semibold">2 недели</div>
+                            <div class="text-sm text-gray-600" id="price2Weeks"></div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="rentalDuration" value="1 month" class="mr-3" checked>
+                        <div>
+                            <div class="font-semibold">1 месяц</div>
+                            <div class="text-sm text-gray-600" id="price1Month"></div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <input type="radio" name="rentalDuration" value="3 months" class="mr-3">
+                        <div>
+                            <div class="font-semibold">3 месяца</div>
+                            <div class="text-sm text-gray-600" id="price3Months"></div>
+                        </div>
+                    </label>
+                </div>
+                <div class="flex space-x-3">
+                    <button onclick="confirmRental()" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                        Подтвердить
+                    </button>
+                    <button onclick="hideRentalModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">
+                        Отмена
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBook = null;
+
+        async function loadBookDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookId = urlParams.get('id');
+            
+            if (!bookId) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/books/${bookId}`);
+                const book = await response.json();
+
+                if (!response.ok) throw new Error(book.message);
+
+                currentBook = book;
+
+                // Update page content
+                document.getElementById('bookCover').src = book.coverImage;
+                document.getElementById('bookTitle').textContent = book.title;
+                document.getElementById('bookAuthor').textContent = book.author;
+                document.getElementById('bookYear').textContent = book.year + ' год';
+                document.getElementById('bookCategory').textContent = book.category;
+                document.getElementById('bookDescription').textContent = book.description;
+                document.getElementById('bookPrice').textContent = book.price + '₽';
+                document.getElementById('bookRentalPrice').textContent = book.rentalPrice + '₽';
+
+                // Calculate rental prices
+                document.getElementById('price2Weeks').textContent = `~${Math.round(book.rentalPrice * 0.67)}₽`;
+                document.getElementById('price1Month').textContent = `~${book.rentalPrice}₽`;
+                document.getElementById('price3Months').textContent = `~${Math.round(book.rentalPrice * 2.7)}₽`;
+
+                // Update availability status
+                const statusDiv = document.getElementById('availabilityStatus');
+                if (!book.isAvailable) {
+                    statusDiv.classList.remove('hidden');
+                    statusDiv.classList.add('bg-yellow-100', 'text-yellow-800');
+                    statusDiv.innerHTML = `
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Книга временно недоступна для аренды
+                    `;
+                    document.querySelector('button[onclick="showRentalOptions()"]').disabled = true;
+                    document.querySelector('button[onclick="showRentalOptions()"]').classList.add('opacity-50', 'cursor-not-allowed');
+                }
+
+                document.title = `${book.title} - ${book.author} | Книжный мир`;
+
+            } catch (error) {
+                console.error('Error loading book:', error);
+                alert('Ошибка загрузки информации о книге');
+                window.location.href = 'index.html';
+            }
+        }
+
+        function showRentalOptions() {
+            document.getElementById('rentalModal').classList.remove('hidden');
+        }
+
+        function hideRentalModal() {
+            document.getElementById('rentalModal').classList.add('hidden');
+        }
+
+        async function confirmRental() {
+            if (!checkAuth()) return;
+
+            const duration = document.querySelector('input[name="rentalDuration"]:checked').value;
+            
+            try {
+                const response = await fetch('/api/profile/rent/' + currentBook._id, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({ rentalDuration: duration })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Книга успешно арендована!');
+                    hideRentalModal();
+                    // Update availability
+                    currentBook.isAvailable = false;
+                    const statusDiv = document.getElementById('availabilityStatus');
+                    statusDiv.classList.remove('hidden');
+                    statusDiv.classList.add('bg-green-100', 'text-green-800');
+                    statusDiv.innerHTML = `
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Книга арендована до ${new Date(data.rentalEndDate).toLocaleDateString('ru-RU')}
+                    `;
+                    document.querySelector('button[onclick="showRentalOptions()"]').disabled = true;
+                    document.querySelector('button[onclick="showRentalOptions()"]').classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error renting book:', error);
+                alert('Ошибка аренды книги');
+            }
+        }
+
+        async function purchaseBook() {
+            if (!checkAuth()) return;
+
+            if (!confirm(`Вы уверены, что хотите купить книгу "${currentBook.title}" за ${currentBook.price}₽?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/profile/purchase/' + currentBook._id, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Книга успешно куплена!');
+                    const statusDiv = document.getElementById('availabilityStatus');
+                    statusDiv.classList.remove('hidden');
+                    statusDiv.classList.add('bg-blue-100', 'text-blue-800');
+                    statusDiv.innerHTML = `
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Книга успешно приобретена в вашу коллекцию
+                    `;
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error purchasing book:', error);
+                alert('Ошибка покупки книги');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadBookDetails();
+            checkAuthState();
+        });
+    </script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
