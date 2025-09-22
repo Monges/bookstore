@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали книги - Книжный магазин</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .reader-content {
+            line-height: 1.8;
+            font-size: 18px;
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: justify;
+        }
+        .reader-content p {
+            margin-bottom: 1.5em;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-xl">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-book-open mr-2"></i>
+                    Книжный мир
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-home mr-1"></i>Главная
+                    </a>
+                    <a href="profile.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-user mr-1"></i>Профиль
+                    </a>
+                    <a href="login.html" class="hover:text-blue-200 font-semibold" id="authLink">
+                        <i class="fas fa-sign-in-alt mr-1"></i>Войти
+                    </a>
+                    <div id="adminLink" class="hidden">
+                        <a href="admin.html" class="hover:text-blue-200 font-semibold">
+                            <i class="fas fa-cog mr-1"></i>Админка
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Book Details -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+                <!-- Book Cover -->
+                <div class="flex justify-center">
+                    <img id="bookCover" src="" alt="Обложка книги" 
+                         class="w-full max-w-sm h-auto rounded-lg shadow-xl"
+                         onerror="this.src='https://via.placeholder.com/300x400/667eea/ffffff?text=Обложка+книги'">
+                </div>
+
+                <!-- Book Info -->
+                <div>
+                    <h1 id="bookTitle" class="text-3xl font-bold text-gray-800 mb-4"></h1>
+                    
+                    <div class="flex items-center mb-6">
+                        <span id="bookAuthor" class="text-xl text-gray-600 mr-4"></span>
+                        <span id="bookYear" class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"></span>
+                    </div>
+
+                    <div class="mb-6">
+                        <span id="bookCategory" class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm"></span>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold mb-2">Описание</h3>
+                        <p id="bookDescription" class="text-gray-700 leading-relaxed"></p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600" id="bookPrice"></div>
+                            <div class="text-sm text-gray-600">Цена покупки</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600" id="bookRentalPrice"></div>
+                            <div class="text-sm text-gray-600">Аренда в месяц</div>
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-4 mb-4" id="actionButtons">
+                        <!-- Кнопки будут добавлены динамически -->
+                    </div>
+
+                    <div id="availabilityStatus" class="mt-4 p-3 rounded-lg hidden">
+                        <!-- Статус доступности -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rental Modal -->
+    <div id="rentalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Выберите срок аренды</h3>
+            <div class="space-y-3 mb-6">
+                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input type="radio" name="rentalDuration" value="2 weeks" class="mr-3">
+                    <div>
+                        <div class="font-semibold">2 недели</div>
+                        <div class="text-sm text-gray-600" id="price2Weeks"></div>
+                    </div>
+                </label>
+                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input type="radio" name="rentalDuration" value="1 month" class="mr-3" checked>
+                    <div>
+                        <div class="font-semibold">1 месяц</div>
+                        <div class="text-sm text-gray-600" id="price1Month"></div>
+                    </div>
+                </label>
+                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input type="radio" name="rentalDuration" value="3 months" class="mr-3">
+                    <div>
+                        <div class="font-semibold">3 месяца</div>
+                        <div class="text-sm text-gray-600" id="price3Months"></div>
+                    </div>
+                </label>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="confirmRental()" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                    Подтвердить
+                </button>
+                <button onclick="hideRentalModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400">
+                    Отмена
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reader Modal -->
+    <div id="readerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h3 id="readerTitle" class="text-2xl font-bold"></h3>
+                    <button onclick="closeReader()" class="text-gray-500 hover:text-gray-700 text-2xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="readerContent" class="p-6 overflow-y-auto flex-1 reader-content">
+                <!-- Контент книги будет здесь -->
+            </div>
+            <div class="p-6 border-t flex justify-between items-center">
+                <div class="flex space-x-2">
+                    <button onclick="changeFontSize('decrease')" class="bg-gray-200 text-gray-700 px-3 py-1 rounded">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button onclick="changeFontSize('increase')" class="bg-gray-200 text-gray-700 px-3 py-1 rounded">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button onclick="toggleDarkModeReader()" class="bg-gray-200 text-gray-700 px-3 py-1 rounded">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+                <button onclick="closeReader()" class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBook = null;
+        let userTransactions = [];
+        let readerFontSize = 18;
+        let isReaderDarkMode = false;
+
+        // Проверка авторизации
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Пожалуйста, войдите в систему');
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Проверка состояния авторизации
+        function checkAuthState() {
+            const token = localStorage.getItem('token');
+            const authLink = document.getElementById('authLink');
+            const adminLink = document.getElementById('adminLink');
+
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    authLink.textContent = 'Выйти';
+                    authLink.href = '#';
+                    authLink.onclick = logout;
+
+                    if (payload.role === 'admin') {
+                        adminLink.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error parsing token:', error);
+                    logout();
+                }
+            }
+        }
+
+        // Выход из системы
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+
+        // Загрузка деталей книги
+        async function loadBookDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookId = urlParams.get('id');
+            
+            if (!bookId) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                // Показываем загрузку
+                document.getElementById('actionButtons').innerHTML = `
+                    <div class="flex-1 text-center py-4">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                        <p class="text-gray-500 mt-2">Загрузка...</p>
+                    </div>
+                `;
+
+                // Загружаем данные книги
+                const bookResponse = await fetch(`/api/books/${bookId}`);
+                const book = await bookResponse.json();
+
+                if (!bookResponse.ok) throw new Error(book.message);
+
+                currentBook = book;
+
+                // Обновляем содержимое страницы
+                document.getElementById('bookCover').src = book.coverImage;
+                document.getElementById('bookTitle').textContent = book.title;
+                document.getElementById('bookAuthor').textContent = book.author;
+                document.getElementById('bookYear').textContent = book.year + ' год';
+                document.getElementById('bookCategory').textContent = book.category;
+                document.getElementById('bookDescription').textContent = book.description;
+                document.getElementById('bookPrice').textContent = book.price + '₽';
+                document.getElementById('bookRentalPrice').textContent = book.rentalPrice + '₽';
+
+                // Рассчитываем цены аренды
+                document.getElementById('price2Weeks').textContent = `~${Math.round(book.rentalPrice * 0.67)}₽`;
+                document.getElementById('price1Month').textContent = `~${book.rentalPrice}₽`;
+                document.getElementById('price3Months').textContent = `~${Math.round(book.rentalPrice * 2.7)}₽`;
+
+                // Загружаем транзакции пользователя
+                await loadUserTransactions();
+
+                // Обновляем кнопки действий
+                updateActionButtons();
+
+                document.title = `${book.title} - ${book.author} | Книжный мир`;
+
+            } catch (error) {
+                console.error('Error loading book:', error);
+                document.getElementById('actionButtons').innerHTML = `
+                    <div class="flex-1 text-center py-4">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-2"></i>
+                        <p class="text-red-500">Ошибка загрузки книги</p>
+                        <button onclick="loadBookDetails()" class="mt-2 bg-blue-600 text-white px-4 py-2 rounded">
+                            Попробовать снова
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Загрузка транзакций пользователя
+        async function loadUserTransactions() {
+            if (!checkAuth()) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/profile', {
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    userTransactions = data.transactions || [];
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+
+        // Проверка статуса книги для пользователя
+        function getBookStatus() {
+            if (!currentBook) return 'unknown';
+
+            // Проверяем, куплена ли книга
+            const purchase = userTransactions.find(t => 
+                t.bookId._id === currentBook._id && t.type === 'purchase' && t.status === 'completed'
+            );
+            if (purchase) return 'purchased';
+
+            // Проверяем, арендована ли книга
+            const rental = userTransactions.find(t => 
+                t.bookId._id === currentBook._id && t.type === 'rental' && 
+                (t.status === 'active rental' || t.status === 'overdue')
+            );
+            if (rental) return 'rented';
+
+            // Проверяем доступность книги
+            return currentBook.isAvailable ? 'available' : 'unavailable';
+        }
+
+        // Обновление кнопок действий
+        function updateActionButtons() {
+            const status = getBookStatus();
+            const actionsDiv = document.getElementById('actionButtons');
+            const statusDiv = document.getElementById('availabilityStatus');
+
+            // Очищаем статус
+            statusDiv.classList.add('hidden');
+            statusDiv.classList.remove('bg-yellow-100', 'text-yellow-800', 'bg-green-100', 'text-green-800', 'bg-blue-100', 'text-blue-800');
+
+            let buttonsHTML = '';
+
+            switch (status) {
+                case 'purchased':
+                    buttonsHTML = `
+                        <button onclick="readBook()" class="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold">
+                            <i class="fas fa-book-reader mr-2"></i>Читать
+                        </button>
+                    `;
+                    statusDiv.classList.remove('hidden');
+                    statusDiv.classList.add('bg-green-100', 'text-green-800');
+                    statusDiv.innerHTML = `
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Книга куплена вами
+                    `;
+                    break;
+
+                case 'rented':
+                    const rental = userTransactions.find(t => 
+                        t.bookId._id === currentBook._id && t.type === 'rental'
+                    );
+                    const endDate = new Date(rental.rentalEndDate);
+                    const daysLeft = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
+
+                    buttonsHTML = `
+                        <button onclick="readBook()" class="flex-1 bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors font-semibold">
+                            <i class="fas fa-book-reader mr-2"></i>Читать
+                        </button>
+                        <button onclick="returnBook('${rental._id}')" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                            <i class="fas fa-undo mr-2"></i>Вернуть
+                        </button>
+                    `;
+                    statusDiv.classList.remove('hidden');
+                    statusDiv.classList.add('bg-blue-100', 'text-blue-800');
+                    statusDiv.innerHTML = `
+                        <i class="fas fa-clock mr-2"></i>
+                        Книга арендована до ${endDate.toLocaleDateString('ru-RU')} (осталось ${daysLeft} дней)
+                    `;
+                    break;
+
+                case 'available':
+                    buttonsHTML = `
+                        <button onclick="purchaseBook()" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                            <i class="fas fa-shopping-cart mr-2"></i>Купить
+                        </button>
+                        <button onclick="showRentalOptions()" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                            <i class="fas fa-calendar-alt mr-2"></i>Арендовать
+                        </button>
+                    `;
+                    break;
+
+                case 'unavailable':
+                    buttonsHTML = `
+                        <button disabled class="flex-1 bg-gray-400 text-white px-6 py-3 rounded-lg cursor-not-allowed font-semibold">
+                            <i class="fas fa-shopping-cart mr-2"></i>Купить
+                        </button>
+                        <button disabled class="flex-1 bg-gray-400 text-white px-6 py-3 rounded-lg cursor-not-allowed font-semibold">
+                            <i class="fas fa-calendar-alt mr-2"></i>Арендовать
+                        </button>
+                    `;
+                    statusDiv.classList.remove('hidden');
+                    statusDiv.classList.add('bg-yellow-100', 'text-yellow-800');
+                    statusDiv.innerHTML = `
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Книга временно недоступна
+                    `;
+                    break;
+
+                default:
+                    buttonsHTML = `
+                        <button onclick="purchaseBook()" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                            <i class="fas fa-shopping-cart mr-2"></i>Купить
+                        </button>
+                        <button onclick="showRentalOptions()" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
+                            <i class="fas fa-calendar-alt mr-2"></i>Арендовать
+                        </button>
+                    `;
+            }
+
+            actionsDiv.innerHTML = buttonsHTML;
+        }
+
+        // Покупка книги
+        async function purchaseBook() {
+            if (!checkAuth()) return;
+
+            if (!confirm(`Вы уверены, что хотите купить книгу "${currentBook.title}" за ${currentBook.price}₽?`)) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/profile/purchase/${currentBook._id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Книга успешно куплена!');
+                    await loadUserTransactions();
+                    updateActionButtons();
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error purchasing book:', error);
+                alert('Ошибка покупки книги');
+            }
+        }
+
+        // Показать варианты аренды
+        function showRentalOptions() {
+            if (!checkAuth()) return;
+            document.getElementById('rentalModal').classList.remove('hidden');
+        }
+
+        // Скрыть модальное окно аренды
+        function hideRentalModal() {
+            document.getElementById('rentalModal').classList.add('hidden');
+        }
+
+        // Подтверждение аренды
+        async function confirmRental() {
+            if (!checkAuth()) return;
+
+            const duration = document.querySelector('input[name="rentalDuration"]:checked').value;
+            
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/profile/rent/${currentBook._id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ rentalDuration: duration })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Книга успешно арендована!');
+                    hideRentalModal();
+                    await loadUserTransactions();
+                    updateActionButtons();
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error renting book:', error);
+                alert('Ошибка аренды книги');
+            }
+        }
+
+        // Возврат книги
+        async function returnBook(transactionId) {
+            if (!confirm('Вы уверены, что хотите вернуть книгу?')) return;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`/api/profile/return/${transactionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Книга успешно возвращена!');
+                    await loadUserTransactions();
+                    updateActionButtons();
+                } else {
+                    alert('Ошибка: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error returning book:', error);
+                alert('Ошибка возврата книги');
+            }
+        }
+
+        // Чтение книги
+        async function readBook() {
+            if (!checkAuth()) return;
+
+            const status = getBookStatus();
+            if (status !== 'purchased' && status !== 'rented') {
+                alert('Для чтения книги необходимо её купить или арендовать');
+                return;
+            }
+
+            try {
+                // Показываем загрузку
+                document.getElementById('readerContent').innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Загрузка книги...</p>
+                    </div>
+                `;
+
+                document.getElementById('readerTitle').textContent = currentBook.title;
+                document.getElementById('readerModal').classList.remove('hidden');
+
+                // Загружаем контент книги
+                const response = await fetch(`/api/books/${currentBook._id}/content`);
+                const data = await response.json();
+
+                if (response.ok && data.content) {
+                    document.getElementById('readerContent').innerHTML = formatBookContent(data.content);
+                } else {
+                    document.getElementById('readerContent').innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fas fa-book-open text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">Текст книги пока недоступен</p>
+                            <p class="text-sm text-gray-400 mt-2">Обратитесь к администратору</p>
+                        </div>
+                    `;
+                }
+
+                // Восстанавливаем настройки читалки
+                const savedFontSize = localStorage.getItem('readerFontSize');
+                const savedDarkMode = localStorage.getItem('readerDarkMode');
+                
+                if (savedFontSize) {
+                    readerFontSize = parseInt(savedFontSize);
+                    updateReaderFontSize();
+                }
+                
+                if (savedDarkMode === 'true') {
+                    toggleReaderDarkMode(true);
+                }
+
+            } catch (error) {
+                console.error('Error loading book content:', error);
+                document.getElementById('readerContent').innerHTML = `
+                    <div class="text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                        <p class="text-red-500">Ошибка загрузки книги</p>
+                        <button onclick="readBook()" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
+                            Попробовать снова
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Форматирование контента книги
+        function formatBookContent(content) {
+            if (!content) return '<p class="text-gray-500">Текст книги отсутствует</p>';
+            
+            // Разбиваем на параграфы и добавляем HTML разметку
+            const paragraphs = content.split('\n\n').filter(p => p.trim());
+            return paragraphs.map(p => `<p>${p.trim().replace(/\n/g, '<br>')}</p>`).join('');
+        }
+
+        // Закрытие читалки
+        function closeReader() {
+            document.getElementById('readerModal').classList.add('hidden');
+        }
+
+        // Изменение размера шрифта в читалке
+        function changeFontSize(action) {
+            if (action === 'increase') {
+                readerFontSize = Math.min(readerFontSize + 2, 28);
+            } else {
+                readerFontSize = Math.max(readerFontSize - 2, 14);
+            }
+            
+            updateReaderFontSize();
+            localStorage.setItem('readerFontSize', readerFontSize);
+        }
+
+        function updateReaderFontSize() {
+            document.getElementById('readerContent').style.fontSize = readerFontSize + 'px';
+        }
+
+        // Переключение темной темы в читалке
+        function toggleDarkModeReader() {
+            isReaderDarkMode = !isReaderDarkMode;
+            const readerModal = document.getElementById('readerModal').querySelector('.bg-white');
+            
+            if (isReaderDarkMode) {
+                readerModal.classList.remove('bg-white');
+                readerModal.classList.add('bg-gray-900', 'text-white');
+                document.getElementById('readerContent').classList.add('text-gray-200');
+            } else {
+                readerModal.classList.remove('bg-gray-900', 'text-white');
+                readerModal.classList.add('bg-white');
+                document.getElementById('readerContent').classList.remove('text-gray-200');
+            }
+            
+            localStorage.setItem('readerDarkMode', isReaderDarkMode);
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthState();
+            loadBookDetails();
+        });
+    </script>
+</body>
+</html>

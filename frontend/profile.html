@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль - Книжный магазин</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-xl">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-book-open mr-2"></i>
+                    Книжный мир
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-home mr-1"></i>Главная
+                    </a>
+                    <a href="profile.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-user mr-1"></i>Профиль
+                    </a>
+                    <a href="login.html" class="hover:text-blue-200 font-semibold" id="authLink">
+                        <i class="fas fa-sign-in-alt mr-1"></i>Войти
+                    </a>
+                    <div id="adminLink" class="hidden">
+                        <a href="admin.html" class="hover:text-blue-200 font-semibold">
+                            <i class="fas fa-cog mr-1"></i>Админка
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-4xl mx-auto">
+            <!-- User Info -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <div class="flex items-center mb-6">
+                    <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mr-4">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800" id="userUsername">Загрузка...</h1>
+                        <p class="text-gray-600" id="userEmail">Загрузка...</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="text-center p-4 bg-blue-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Статус</div>
+                        <div class="font-semibold" id="userRole">Загрузка...</div>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Дата регистрации</div>
+                        <div class="font-semibold" id="userCreatedAt">Загрузка...</div>
+                    </div>
+                    <div class="text-center p-4 bg-purple-50 rounded-lg">
+                        <div class="text-sm text-gray-600">Активных аренд</div>
+                        <div class="font-semibold" id="activeRentalsCount">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Rentals -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">
+                    <i class="fas fa-book-open mr-2 text-green-600"></i>Активные аренды
+                </h2>
+                <div id="currentRentals">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Загрузка аренд...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold mb-4">
+                    <i class="fas fa-history mr-2 text-blue-600"></i>История операций
+                </h2>
+                <div id="transactionHistory">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Загрузка истории...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ProfileManager {
+            constructor() {
+                this.userData = null;
+                this.transactions = [];
+            }
+
+            async init() {
+                if (!checkAuth()) return;
+                
+                await this.loadProfile();
+                this.setupEventListeners();
+            }
+
+            async loadProfile() {
+                try {
+                    // Try to load from API first
+                    try {
+                        const response = await authFetch('/api/profile');
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.userData = data.user;
+                            this.transactions = data.transactions || [];
+                            this.updateProfileDisplay();
+                            this.displayTransactions();
+                            return;
+                        }
+                    } catch (apiError) {
+                        console.log('API not available, using demo data');
+                    }
+
+                    // Fallback to demo data
+                    this.userData = {
+                        username: 'Демо пользователь',
+                        email: 'demo@example.com',
+                        role: 'user',
+                        createdAt: new Date().toISOString()
+                    };
+
+                    // Load demo transactions from localStorage
+                    this.transactions = this.loadDemoTransactions();
+                    
+                    this.updateProfileDisplay();
+                    this.displayTransactions();
+                } catch (error) {
+                    console.error('Error loading profile:', error);
+                    this.showError('Ошибка загрузки профиля: ' + error.message);
+                }
+            }
+
+            loadDemoTransactions() {
+                const rentedBooks = JSON.parse(localStorage.getItem('rentedBooks') || '[]');
+                const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
+                
+                const transactions = [];
+
+                // Add rented books as active rentals
+                rentedBooks.forEach(rental => {
+                    transactions.push({
+                        _id: 'rental_' + rental.bookId,
+                        type: 'rental',
+                        status: new Date(rental.rentalEndDate) > new Date() ? 'active rental' : 'overdue',
+                        amount: this.calculateRentalPrice(rental.rentalDuration),
+                        rentalDuration: rental.rentalDuration,
+                        rentalEndDate: rental.rentalEndDate,
+                        createdAt: rental.rentalDate,
+                        bookId: {
+                            title: rental.title,
+                            author: rental.author
+                        }
+                    });
+                });
+
+                // Add purchased books
+                purchasedBooks.forEach(purchase => {
+                    transactions.push({
+                        _id: 'purchase_' + purchase.bookId,
+                        type: 'purchase',
+                        status: 'completed',
+                        amount: 299, // Demo price
+                        createdAt: purchase.purchaseDate,
+                        bookId: {
+                            title: purchase.title,
+                            author: purchase.author
+                        }
+                    });
+                });
+
+                return transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+
+            calculateRentalPrice(duration) {
+                switch (duration) {
+                    case '2 weeks': return 67;
+                    case '1 month': return 99;
+                    case '3 months': return 267;
+                    default: return 99;
+                }
+            }
+
+            updateProfileDisplay() {
+                if (!this.userData) return;
+
+                document.getElementById('userUsername').textContent = this.userData.username;
+                document.getElementById('userEmail').textContent = this.userData.email;
+                document.getElementById('userRole').textContent = this.userData.role === 'admin' ? 'Администратор' : 'Пользователь';
+                document.getElementById('userCreatedAt').textContent = new Date(this.userData.createdAt).toLocaleDateString('ru-RU');
+                
+                const activeRentals = this.transactions.filter(t => t.status === 'active rental');
+                document.getElementById('activeRentalsCount').textContent = activeRentals.length;
+            }
+
+            displayTransactions() {
+                const container = document.getElementById('transactionHistory');
+                const currentRentalsContainer = document.getElementById('currentRentals');
+
+                if (this.transactions.length === 0) {
+                    container.innerHTML = this.createEmptyState('История операций пуста', 'fas fa-receipt');
+                    currentRentalsContainer.innerHTML = this.createEmptyState('Нет активных аренд', 'fas fa-book-open');
+                    return;
+                }
+
+                // Display current rentals
+                const currentRentals = this.transactions.filter(t => t.status === 'active rental');
+                currentRentalsContainer.innerHTML = this.createRentalsList(currentRentals);
+
+                // Display transaction history
+                const history = this.transactions.filter(t => t.status !== 'active rental');
+                container.innerHTML = this.createTransactionsList(history);
+            }
+
+            createEmptyState(message, icon) {
+                return `
+                    <div class="text-center py-8">
+                        <i class="${icon} text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500">${message}</p>
+                    </div>
+                `;
+            }
+
+            createRentalsList(rentals) {
+                if (rentals.length === 0) {
+                    return this.createEmptyState('Нет активных аренд', 'fas fa-book-open');
+                }
+
+                let html = '';
+                rentals.forEach(rental => {
+                    const endDate = new Date(rental.rentalEndDate);
+                    const daysLeft = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
+                    
+                    html += `
+                        <div class="border rounded-lg p-4 mb-4 bg-gradient-to-r from-green-50 to-blue-50">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h4 class="font-semibold text-lg">${rental.bookId.title}</h4>
+                                    <p class="text-gray-600">${rental.bookId.author}</p>
+                                </div>
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                                    ${rental.rentalDuration}
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 mb-3">
+                                <div>
+                                    <span class="text-sm text-gray-600">Арендовано до:</span>
+                                    <div class="font-semibold">${endDate.toLocaleDateString('ru-RU')}</div>
+                                </div>
+                                <div>
+                                    <span class="text-sm text-gray-600">Осталось дней:</span>
+                                    <div class="font-semibold ${daysLeft <= 3 ? 'text-red-600' : 'text-green-600'}">
+                                        ${daysLeft} ${this.getDayText(daysLeft)}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button onclick="profileManager.returnBook('${rental._id}')" 
+                                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm">
+                                <i class="fas fa-undo mr-2"></i>Вернуть книгу
+                            </button>
+                        </div>
+                    `;
+                });
+
+                return html;
+            }
+
+            createTransactionsList(transactions) {
+                if (transactions.length === 0) {
+                    return this.createEmptyState('История операций пуста', 'fas fa-receipt');
+                }
+
+                let html = '';
+                transactions.forEach(transaction => {
+                    const date = new Date(transaction.createdAt);
+                    const isRental = transaction.type === 'rental';
+                    
+                    html += `
+                        <div class="border rounded-lg p-4 mb-4">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="font-semibold">${transaction.bookId.title}</h4>
+                                    <p class="text-gray-600 text-sm">${transaction.bookId.author}</p>
+                                </div>
+                                <span class="px-3 py-1 rounded-full text-sm ${
+                                    transaction.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                    transaction.status === 'overdue' ? 'bg-red-100 text-red-800' :
+                                    'bg-gray-100 text-gray-800'
+                                }">
+                                    ${isRental ? 'Аренда' : 'Покупка'}
+                                </span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600">Дата:</span>
+                                    <div>${date.toLocaleDateString('ru-RU')}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Сумма:</span>
+                                    <div class="font-semibold">${transaction.amount}₽</div>
+                                </div>
+                                ${isRental ? `
+                                <div>
+                                    <span class="text-gray-600">Срок:</span>
+                                    <div>${transaction.rentalDuration}</div>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Статус:</span>
+                                    <div>${this.getStatusText(transaction.status)}</div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                return html;
+            }
+
+            getDayText(days) {
+                if (days === 1) return 'день';
+                if (days < 5) return 'дня';
+                return 'дней';
+            }
+
+            getStatusText(status) {
+                const statusMap = {
+                    'completed': 'Завершено',
+                    'active rental': 'Активно',
+                    'overdue': 'Просрочено',
+                    'cancelled': 'Отменено'
+                };
+                return statusMap[status] || status;
+            }
+
+            async returnBook(transactionId) {
+                if (!confirm('Вы уверены, что хотите вернуть книгу?')) return;
+
+                try {
+                    // Try API first
+                    try {
+                        const response = await authFetch(`/api/profile/return/${transactionId}`, {
+                            method: 'POST'
+                        });
+
+                        if (response.ok) {
+                            this.showSuccess('Книга успешно возвращена через API!');
+                            await this.loadProfile();
+                            return;
+                        }
+                    } catch (apiError) {
+                        // Fallback to localStorage for demo
+                        const rentedBooks = JSON.parse(localStorage.getItem('rentedBooks') || '[]');
+                        const bookId = transactionId.replace('rental_', '');
+                        const updatedRentals = rentedBooks.filter(book => book.bookId !== bookId);
+                        localStorage.setItem('rentedBooks', JSON.stringify(updatedRentals));
+                        
+                        this.showSuccess('Книга успешно возвращена (демо режим)!');
+                        await this.loadProfile();
+                    }
+                } catch (error) {
+                    console.error('Error returning book:', error);
+                    this.showError('Ошибка возврата книги: ' + error.message);
+                }
+            }
+
+            setupEventListeners() {
+                // Add any profile-specific event listeners here
+            }
+
+            showError(message) {
+                alert('❌ ' + message);
+            }
+
+            showSuccess(message) {
+                alert('✅ ' + message);
+            }
+        }
+
+        const profileManager = new ProfileManager();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthState();
+            profileManager.init();
+        });
+    </script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чтение книги - Книжный магазин</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .book-content {
+            line-height: 1.8;
+            font-size: 18px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .book-content p {
+            margin-bottom: 1.5em;
+            text-align: justify;
+        }
+        .reading-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .access-denied {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            border: 2px solid #e17055;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="reading-header text-white shadow-xl">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-book-open mr-2"></i>
+                    Книжный мир
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-home mr-1"></i>Главная
+                    </a>
+                    <a href="profile.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-user mr-1"></i>Профиль
+                    </a>
+                    <button onclick="toggleDarkMode()" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-moon mr-1"></i>Тема
+                    </button>
+                    <button onclick="goBack()" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-arrow-left mr-1"></i>Назад
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <h1 id="bookTitle" class="text-3xl font-bold text-center mb-8 text-gray-800"></h1>
+            
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p class="text-gray-500">Проверка доступа и загрузка...</p>
+            </div>
+
+            <!-- Access Denied State -->
+            <div id="accessDeniedState" class="access-denied rounded-lg p-8 text-center hidden">
+                <div class="mb-6">
+                    <i class="fas fa-lock text-6xl text-orange-600 mb-4"></i>
+                    <h2 class="text-2xl font-bold text-orange-800 mb-2">Доступ ограничен</h2>
+                    <p class="text-orange-700">У вас нет доступа к этой книге</p>
+                </div>
+                
+                <div class="bg-white bg-opacity-70 rounded-lg p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Как получить доступ:</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                        <div class="bg-green-100 p-4 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-shopping-cart text-green-600 mr-2"></i>
+                                <span class="font-semibold text-green-800">Купить книгу</span>
+                            </div>
+                            <p class="text-sm text-green-700">Получите постоянный доступ</p>
+                            <p class="text-lg font-bold text-green-800" id="purchasePrice">299₽</p>
+                        </div>
+                        
+                        <div class="bg-blue-100 p-4 rounded-lg">
+                            <div class="flex items-center mb-2">
+                                <i class="fas fa-calendar-alt text-blue-600 mr-2"></i>
+                                <span class="font-semibold text-blue-800">Арендовать</span>
+                            </div>
+                            <p class="text-sm text-blue-700">Доступ на 30 дней</p>
+                            <p class="text-lg font-bold text-blue-800" id="rentalPrice">99₽/мес</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center space-x-4">
+                    <button onclick="purchaseBook()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors" id="purchaseBtn">
+                        <i class="fas fa-shopping-cart mr-2"></i>Купить книгу
+                    </button>
+                    <button onclick="rentBook()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors" id="rentBtn">
+                        <i class="fas fa-calendar-alt mr-2"></i>Арендовать
+                    </button>
+                </div>
+                
+                <div class="mt-6 text-center">
+                    <button onclick="goBack()" class="text-gray-600 hover:text-gray-800 underline">
+                        <i class="fas fa-arrow-left mr-1"></i>Вернуться к описанию книги
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reading Controls -->
+            <div id="readingControls" class="hidden justify-center mb-6 space-x-4">
+                <button onclick="changeFontSize('increase')" class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg hover:bg-blue-200">
+                    <i class="fas fa-plus mr-2"></i>Шрифт
+                </button>
+                <button onclick="changeFontSize('decrease')" class="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg hover:bg-blue-200">
+                    <i class="fas fa-minus mr-2"></i>Шрифт
+                </button>
+                <button onclick="toggleDarkMode()" class="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-200">
+                    <i class="fas fa-moon mr-2"></i>Тема
+                </button>
+                <button onclick="markProgress()" class="bg-purple-100 text-purple-800 px-4 py-2 rounded-lg hover:bg-purple-200">
+                    <i class="fas fa-bookmark mr-2"></i>Закладка
+                </button>
+            </div>
+
+            <!-- Book Content -->
+            <div id="bookContent" class="book-content text-gray-700 hidden"></div>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="hidden text-center py-8">
+                <div class="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-lg mb-6">
+                    <div class="flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-500 text-2xl mr-3"></i>
+                        <div>
+                            <p class="font-semibold">Доступ подтвержден!</p>
+                            <p class="text-sm">Вы можете читать эту книгу</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div id="backButton" class="mt-12 text-center hidden">
+                <button onclick="goBack()" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-arrow-left mr-2"></i>Вернуться к книге
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentBookId = null;
+        let fontSize = 18;
+        let bookData = null;
+        let hasAccess = false;
+
+        // Создаем демо токен если его нет
+        if (!localStorage.getItem('token')) {
+            localStorage.setItem('token', 'demo_token_' + Date.now());
+        }
+
+        async function initReader() {
+            const urlParams = new URLSearchParams(window.location.search);
+            currentBookId = urlParams.get('id');
+            
+            if (!currentBookId) {
+                alert('Книга не найдена');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            try {
+                showLoadingState();
+
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('Пожалуйста, войдите в систему для чтения книг');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                // Загружаем данные о книге
+                await loadBookData();
+                
+                // Проверяем доступ
+                hasAccess = checkUserAccess();
+                console.log('Has access:', hasAccess);
+
+                if (hasAccess) {
+                    showBookContent();
+                } else {
+                    showAccessDeniedState();
+                }
+
+            } catch (error) {
+                console.error('Error initializing reader:', error);
+                showErrorState();
+            }
+        }
+
+        function showLoadingState() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            hideOtherStates();
+        }
+
+        function showAccessDeniedState() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('accessDeniedState').classList.remove('hidden');
+            hideOtherContentStates();
+
+            if (bookData) {
+                document.getElementById('purchasePrice').textContent = `${bookData.price || 299}₽`;
+                document.getElementById('rentalPrice').textContent = `${bookData.rentalPrice || 99}₽/мес`;
+            }
+        }
+
+        function showBookContent() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('accessDeniedState').classList.add('hidden');
+            document.getElementById('readingControls').classList.remove('hidden');
+            document.getElementById('readingControls').style.display = 'flex';
+            document.getElementById('bookContent').classList.remove('hidden');
+            document.getElementById('successMessage').classList.remove('hidden');
+            document.getElementById('backButton').classList.remove('hidden');
+
+            // Загружаем контент книги
+            loadBookContent();
+
+            // Скрываем успешное сообщение через 3 секунды
+            setTimeout(() => {
+                document.getElementById('successMessage').classList.add('hidden');
+            }, 3000);
+        }
+
+        function hideOtherStates() {
+            document.getElementById('accessDeniedState').classList.add('hidden');
+            hideOtherContentStates();
+        }
+
+        function hideOtherContentStates() {
+            document.getElementById('readingControls').classList.add('hidden');
+            document.getElementById('bookContent').classList.add('hidden');
+            document.getElementById('successMessage').classList.add('hidden');
+            document.getElementById('backButton').classList.add('hidden');
+        }
+
+        async function loadBookData() {
+            try {
+                // Пробуем загрузить с API
+                const response = await fetch(`/api/books/${currentBookId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    bookData = await response.json();
+                } else {
+                    // Fallback для демо
+                    bookData = {
+                        _id: currentBookId,
+                        title: 'Демо книга',
+                        author: 'Демо автор',
+                        price: 299,
+                        rentalPrice: 99
+                    };
+                }
+
+                document.getElementById('bookTitle').textContent = bookData.title;
+                document.title = `${bookData.title} - Читалка`;
+
+            } catch (error) {
+                console.error('Error loading book data:', error);
+                // Fallback данные
+                bookData = {
+                    _id: currentBookId,
+                    title: 'Демо книга',
+                    author: 'Демо автор',
+                    price: 299,
+                    rentalPrice: 99
+                };
+                document.getElementById('bookTitle').textContent = bookData.title;
+            }
+        }
+
+        function checkUserAccess() {
+            // Проверяем localStorage на наличие покупок/аренды
+            const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
+            const rentedBooks = JSON.parse(localStorage.getItem('rentedBooks') || '[]');
+            
+            const hasPurchase = purchasedBooks.includes(currentBookId);
+            const hasRental = rentedBooks.includes(currentBookId);
+            
+            console.log('Access check:', {
+                currentBookId,
+                purchasedBooks,
+                rentedBooks,
+                hasPurchase,
+                hasRental
+            });
+            
+            return hasPurchase || hasRental;
+        }
+
+        function loadBookContent() {
+            // Демо контент для книги
+            const content = `
+                <h2>Глава 1. Начало приключения</h2>
+                
+                <p>Это демонстрационное содержание книги. В настоящем приложении здесь был бы полный текст выбранной книги "${bookData.title}" автора ${bookData.author}.</p>
+                
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                
+                <h2>Глава 2. Развитие сюжета</h2>
+                
+                <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                
+                <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+
+                <h2>Глава 3. Захватывающее продолжение</h2>
+                
+                <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+                
+                <p>At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.</p>
+            `;
+            
+            document.getElementById('bookContent').innerHTML = content;
+            restoreSettings();
+        }
+
+        async function purchaseBook() {
+            if (!currentBookId || !bookData) return;
+            
+            const btn = document.getElementById('purchaseBtn');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Покупка...';
+                btn.disabled = true;
+                
+                // Имитируем API запрос
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Сохраняем покупку в localStorage
+                const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
+                if (!purchasedBooks.includes(currentBookId)) {
+                    purchasedBooks.push(currentBookId);
+                    localStorage.setItem('purchasedBooks', JSON.stringify(purchasedBooks));
+                }
+                
+                // Показываем успех
+                alert('Книга успешно приобретена!');
+                
+                // Обновляем состояние
+                hasAccess = true;
+                showBookContent();
+                
+            } catch (error) {
+                console.error('Purchase error:', error);
+                alert('Произошла ошибка при покупке. Попробуйте еще раз.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function rentBook() {
+            if (!currentBookId || !bookData) return;
+            
+            const btn = document.getElementById('rentBtn');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Аренда...';
+                btn.disabled = true;
+                
+                // Имитируем API запрос
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Сохраняем аренду в localStorage
+                const rentedBooks = JSON.parse(localStorage.getItem('rentedBooks') || '[]');
+                if (!rentedBooks.includes(currentBookId)) {
+                    rentedBooks.push(currentBookId);
+                    localStorage.setItem('rentedBooks', JSON.stringify(rentedBooks));
+                }
+                
+                // Показываем успех
+                alert('Книга успешно арендована на 30 дней!');
+                
+                // Обновляем состояние
+                hasAccess = true;
+                showBookContent();
+                
+            } catch (error) {
+                console.error('Rental error:', error);
+                alert('Произошла ошибка при аренде. Попробуйте еще раз.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function restoreSettings() {
+            const savedFontSize = localStorage.getItem('bookFontSize');
+            const savedDarkMode = localStorage.getItem('darkMode');
+            
+            if (savedFontSize) {
+                fontSize = parseInt(savedFontSize);
+                updateFontSize();
+            }
+            
+            if (savedDarkMode === 'true') {
+                document.body.classList.add('bg-gray-900');
+                document.body.classList.remove('bg-gray-50');
+            }
+        }
+
+        function changeFontSize(action) {
+            if (action === 'increase') {
+                fontSize = Math.min(fontSize + 2, 28);
+            } else {
+                fontSize = Math.max(fontSize - 2, 14);
+            }
+            
+            updateFontSize();
+            localStorage.setItem('bookFontSize', fontSize);
+        }
+
+        function updateFontSize() {
+            document.getElementById('bookContent').style.fontSize = fontSize + 'px';
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('bg-gray-900');
+            document.body.classList.toggle('bg-gray-50');
+            
+            const isDark = document.body.classList.contains('bg-gray-900');
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        function markProgress() {
+            const scrollPosition = window.scrollY;
+            localStorage.setItem(`bookmark_${currentBookId}`, scrollPosition);
+            
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i>Сохранено';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+            }, 2000);
+        }
+
+        function goBack() {
+            if (currentBookId) {
+                const referrer = document.referrer;
+                if (referrer && referrer.includes('book-detail.html')) {
+                    window.location.href = `book-detail.html?id=${currentBookId}`;
+                } else if (referrer && referrer.includes('profile.html')) {
+                    window.location.href = 'profile.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
+        function showErrorState() {
+            document.getElementById('loadingState').innerHTML = `
+                <div class="text-center py-12">
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                    <p class="text-red-500 mb-4">Ошибка загрузки книги</p>
+                    <button onclick="initReader()" class="bg-blue-600 text-white px-4 py-2 rounded">
+                        Попробовать снова
+                    </button>
+                </div>
+            `;
+        }
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            // Восстанавливаем позицию чтения если есть закладка
+            const urlParams = new URLSearchParams(window.location.search);
+            const bookId = urlParams.get('id');
+            
+            if (bookId) {
+                const savedPosition = localStorage.getItem(`bookmark_${bookId}`);
+                if (savedPosition) {
+                    setTimeout(() => {
+                        window.scrollTo(0, parseInt(savedPosition));
+                    }, 1000);
+                }
+            }
+            
+            initReader();
+        });
+
+        // Функция для проверки авторизации (заглушка)
+        function checkAuth() {
+            return localStorage.getItem('token') !== null;
+        }
+    </script>
+</body>
+</html>

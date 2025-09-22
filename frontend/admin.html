@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Книжный магазин</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .tab-btn {
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-xl">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <a href="index.html" class="text-2xl font-bold flex items-center">
+                    <i class="fas fa-book-open mr-2"></i>
+                    Книжный мир
+                </a>
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-home mr-1"></i>Главная
+                    </a>
+                    <a href="profile.html" class="hover:text-blue-200 font-semibold">
+                        <i class="fas fa-user mr-1"></i>Профиль
+                    </a>
+                    <a href="login.html" class="hover:text-blue-200 font-semibold" id="authLink">
+                        <i class="fas fa-sign-in-alt mr-1"></i>Войти
+                    </a>
+                    <div id="adminLink" class="hidden">
+                        <a href="admin.html" class="hover:text-blue-200 font-semibold">
+                            <i class="fas fa-cog mr-1"></i>Админка
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Content -->
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8 text-gray-800">
+            <i class="fas fa-cog mr-3 text-blue-600"></i>Панель администратора
+        </h1>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="text-3xl font-bold text-blue-600 mb-2" id="statsBooks">0</div>
+                <div class="text-gray-600">Всего книг</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="text-3xl font-bold text-green-600 mb-2" id="statsUsers">0</div>
+                <div class="text-gray-600">Пользователей</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="text-3xl font-bold text-purple-600 mb-2" id="statsTransactions">0</div>
+                <div class="text-gray-600">Транзакций</div>
+            </div>
+            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
+                <div class="text-3xl font-bold text-orange-600 mb-2" id="statsRevenue">0</div>
+                <div class="text-gray-600">Выручка (₽)</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-xl shadow-lg mb-8">
+            <div class="flex border-b">
+                <button class="tab-btn py-4 px-6 font-semibold border-b-2 border-blue-600 text-blue-600 active" onclick="switchTab('books')">
+                    Управление книгами
+                </button>
+                <button class="tab-btn py-4 px-6 font-semibold text-gray-600" onclick="switchTab('transactions')">
+                    Транзакции
+                </button>
+                <button class="tab-btn py-4 px-6 font-semibold text-gray-600" onclick="switchTab('overdue')">
+                    Просрочки
+                </button>
+            </div>
+        </div>
+
+        <!-- Books Tab -->
+        <div id="booksTab" class="tab-content">
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-2xl font-bold mb-6">Добавить новую книгу</h2>
+                <form id="addBookForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Название *</label>
+                        <input type="text" name="title" required class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Автор *</label>
+                        <input type="text" name="author" required class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Год *</label>
+                        <input type="number" name="year" required class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Категория *</label>
+                        <select name="category" required class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">Выберите категорию</option>
+                            <option value="Фэнтези">Фэнтези</option>
+                            <option value="Научная фантастика">Научная фантастика</option>
+                            <option value="Роман">Роман</option>
+                            <option value="Детектив">Детектив</option>
+                            <option value="Ужасы">Ужасы</option>
+                            <option value="Приключения">Приключения</option>
+                            <option value="Исторический">Исторический</option>
+                            <option value="Биография">Биография</option>
+                            <option value="Поэзия">Поэзия</option>
+                            <option value="Драма">Драма</option>
+                            <option value="Комиксы">Комиксы</option>
+                            <option value="ЛитРПГ">ЛитРПГ</option>
+                            <option value="Другое">Другое</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Цена покупки (₽) *</label>
+                        <input type="number" name="price" required step="0.01" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Цена аренды (₽/мес) *</label>
+                        <input type="number" name="rentalPrice" required step="0.01" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Описание *</label>
+                        <textarea name="description" required rows="3" class="w-full px-4 py-2 border rounded-lg" placeholder="Краткое описание книги"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Текст книги</label>
+                        <textarea name="content" rows="6" class="w-full px-4 py-2 border rounded-lg" placeholder="Полный текст книги (необязательно)"></textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Обложка (URL)</label>
+                        <input type="url" name="coverImage" class="w-full px-4 py-2 border rounded-lg" placeholder="https://example.com/cover.jpg">
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                            Добавить книгу
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6">Список книг</h2>
+                <div id="booksList">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Загрузка книг...</p>
+                    </div>
+                </div>
+                <div id="booksPagination" class="mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Transactions Tab -->
+        <div id="transactionsTab" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6">История транзакций</h2>
+                <div id="transactionsList">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Загрузка транзакций...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overdue Tab -->
+        <div id="overdueTab" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold mb-6">Просроченные аренды</h2>
+                <div id="overdueList">
+                    <div class="text-center py-8">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+                        <p class="text-gray-500">Загрузка просрочек...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AdminManager {
+            constructor() {
+                this.currentPage = 1;
+                this.booksPerPage = 10;
+            }
+
+            async init() {
+                if (!checkAuth()) return;
+                if (!isAdmin()) {
+                    alert('Доступ запрещен. Требуются права администратора.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                await this.loadStats();
+                await this.loadBooks();
+                this.setupEventListeners();
+            }
+
+            async loadStats() {
+                try {
+                    // Demo stats since API might not be available
+                    const demoStats = {
+                        totalBooks: 156,
+                        totalUsers: 892,
+                        totalTransactions: 1247,
+                        totalRevenue: 284560
+                    };
+                    
+                    this.updateStatsDisplay(demoStats);
+                    
+                    // Try to load real stats if API is available
+                    try {
+                        const response = await authFetch('/api/admin/stats');
+                        if (response.ok) {
+                            const stats = await response.json();
+                            this.updateStatsDisplay(stats);
+                        }
+                    } catch (apiError) {
+                        console.log('Using demo stats');
+                    }
+                } catch (error) {
+                    console.error('Error loading stats:', error);
+                }
+            }
+
+            updateStatsDisplay(stats) {
+                document.getElementById('statsBooks').textContent = stats.totalBooks?.toLocaleString() || '0';
+                document.getElementById('statsUsers').textContent = stats.totalUsers?.toLocaleString() || '0';
+                document.getElementById('statsTransactions').textContent = stats.totalTransactions?.toLocaleString() || '0';
+                document.getElementById('statsRevenue').textContent = stats.totalRevenue?.toLocaleString('ru-RU') || '0';
+            }
+
+            async loadBooks(page = 1) {
+                try {
+                    // Demo books data
+                    const demoBooks = [
+                        {
+                            _id: '1',
+                            title: 'Война и мир',
+                            author: 'Лев Толстой',
+                            year: 1869,
+                            category: 'Роман',
+                            price: 450,
+                            rentalPrice: 50,
+                            isAvailable: true
+                        },
+                        {
+                            _id: '2',
+                            title: 'Преступление и наказание',
+                            author: 'Фёдор Достоевский',
+                            year: 1866,
+                            category: 'Роман',
+                            price: 380,
+                            rentalPrice: 45,
+                            isAvailable: false
+                        }
+                    ];
+                    
+                    this.displayBooks(demoBooks);
+                    
+                    // Try to load real books if API is available
+                    try {
+                        const response = await authFetch(`/api/books?page=${page}&limit=${this.booksPerPage}`);
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.displayBooks(data.books || data);
+                        }
+                    } catch (apiError) {
+                        console.log('Using demo books');
+                    }
+                } catch (error) {
+                    console.error('Error loading books:', error);
+                    document.getElementById('booksList').innerHTML = 
+                        `<p class="text-red-500">Ошибка загрузки: ${error.message}</p>`;
+                }
+            }
+
+            displayBooks(books) {
+                const container = document.getElementById('booksList');
+                
+                if (!books || books.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500">Книги не найдены</p>';
+                    return;
+                }
+
+                let html = '<div class="grid grid-cols-1 gap-4">';
+                books.forEach(book => {
+                    html += `
+                        <div class="border rounded-lg p-4 flex justify-between items-center">
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-lg">${book.title}</h4>
+                                <p class="text-gray-600">${book.author} • ${book.year} • ${book.category}</p>
+                                <p class="text-sm">Покупка: ${book.price}₽ • Аренда: ${book.rentalPrice}₽/мес</p>
+                                <span class="text-sm ${book.isAvailable ? 'text-green-600' : 'text-red-600'}">
+                                    ${book.isAvailable ? 'Доступна' : 'Недоступна'}
+                                </span>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="adminManager.editBook('${book._id}')" class="text-blue-600 hover:text-blue-800">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="adminManager.deleteBook('${book._id}')" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+
+                container.innerHTML = html;
+            }
+
+            async addBook(bookData) {
+                try {
+                    if (!bookData.title || !bookData.author) {
+                        throw new Error('Заполните обязательные поля');
+                    }
+
+                    const data = {
+                        ...bookData,
+                        year: parseInt(bookData.year),
+                        price: parseFloat(bookData.price),
+                        rentalPrice: parseFloat(bookData.rentalPrice)
+                    };
+
+                    // Try to save via API
+                    try {
+                        const response = await authFetch('/api/books', {
+                            method: 'POST',
+                            body: JSON.stringify(data)
+                        });
+
+                        if (response.ok) {
+                            this.showSuccess('Книга успешно добавлена через API!');
+                        } else {
+                            throw new Error('API error');
+                        }
+                    } catch (apiError) {
+                        // Fallback to localStorage for demo
+                        const books = JSON.parse(localStorage.getItem('adminBooks') || '[]');
+                        books.push({
+                            ...data,
+                            _id: 'book_' + Date.now(),
+                            isAvailable: true
+                        });
+                        localStorage.setItem('adminBooks', JSON.stringify(books));
+                        this.showSuccess('Книга успешно добавлена (демо режим)!');
+                    }
+
+                    await this.loadBooks();
+                    document.getElementById('addBookForm').reset();
+                } catch (error) {
+                    console.error('Error adding book:', error);
+                    this.showError('Ошибка добавления книги: ' + error.message);
+                }
+            }
+
+            async deleteBook(bookId) {
+                if (!confirm('Вы уверены, что хотите удалить эту книгу?')) return;
+
+                try {
+                    // Try to delete via API
+                    try {
+                        const response = await authFetch(`/api/books/${bookId}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            this.showSuccess('Книга успешно удалена через API!');
+                        } else {
+                            throw new Error('API error');
+                        }
+                    } catch (apiError) {
+                        // Fallback to localStorage for demo
+                        const books = JSON.parse(localStorage.getItem('adminBooks') || '[]');
+                        const filteredBooks = books.filter(book => book._id !== bookId);
+                        localStorage.setItem('adminBooks', JSON.stringify(filteredBooks));
+                        this.showSuccess('Книга успешно удалена (демо режим)!');
+                    }
+
+                    await this.loadBooks();
+                } catch (error) {
+                    console.error('Error deleting book:', error);
+                    this.showError('Ошибка удаления книги: ' + error.message);
+                }
+            }
+
+            editBook(bookId) {
+                alert('Редактирование книги с ID: ' + bookId + '\n\nЭта функция в разработке.');
+            }
+
+            setupEventListeners() {
+                const addBookForm = document.getElementById('addBookForm');
+                if (addBookForm) {
+                    addBookForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.target);
+                        const bookData = Object.fromEntries(formData.entries());
+                        await this.addBook(bookData);
+                    });
+                }
+            }
+
+            showError(message) {
+                alert('❌ ' + message);
+            }
+
+            showSuccess(message) {
+                alert('✅ ' + message);
+            }
+        }
+
+        const adminManager = new AdminManager();
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'border-blue-600', 'text-blue-600');
+                btn.classList.add('text-gray-600');
+            });
+            
+            event.target.classList.add('active', 'border-blue-600', 'text-blue-600');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthState();
+            adminManager.init();
+        });
+    </script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
