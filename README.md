@@ -2,7 +2,9 @@
 
 \# Запустите MongoDB
 
-mongod
+\# Импортируйте связи (Saved Connections) из compass-connections.json
+
+\# Импортируйте книги в папку books в mongo из bookstore.books.json
 
 \# Запустите сервер
 
